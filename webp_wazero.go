@@ -25,6 +25,8 @@ var webpWasm []byte
 func decode(r io.Reader, configOnly, decodeAll bool) (*WEBP, image.Config, error) {
 	initOnce()
 
+	decodeAll = true // TODO(bep)
+
 	var cfg image.Config
 	var data []byte
 
