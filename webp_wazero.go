@@ -23,7 +23,6 @@ import (
 var webpWasm []byte
 
 func decode(r io.Reader, configOnly, decodeAll bool) (*WEBP, image.Config, error) {
-	fmt.Println("DECODE IMAGE")
 	initOnce()
 
 	var cfg image.Config
