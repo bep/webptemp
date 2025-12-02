@@ -23,6 +23,7 @@ import (
 var webpWasm []byte
 
 func decode(r io.Reader, configOnly, decodeAll bool) (*WEBP, image.Config, error) {
+	fmt.Println("DECODE IMAGE")
 	initOnce()
 
 	var cfg image.Config
@@ -259,8 +260,8 @@ func encode(w io.Writer, m image.Image, quality, method int, lossless, exact boo
 	var data []byte
 	var colorspace int
 
-	var width = m.Bounds().Dx()
-	var height = m.Bounds().Dy()
+	width := m.Bounds().Dx()
+	height := m.Bounds().Dy()
 
 	switch img := m.(type) {
 	case *image.YCbCr:
@@ -269,7 +270,7 @@ func encode(w io.Writer, m image.Image, quality, method int, lossless, exact boo
 	case *image.NYCbCrA:
 		if img.SubsampleRatio == image.YCbCrSubsampleRatio420 {
 			length := len(img.Y) + len(img.Cb) + len(img.Cr) + len(img.A)
-			var b = struct {
+			b := struct {
 				addr *uint8
 				len  int
 				cap  int
