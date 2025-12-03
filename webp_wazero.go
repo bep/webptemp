@@ -13,6 +13,7 @@ import (
 	"os"
 	"runtime"
 	"sync"
+	"time"
 	"unsafe"
 
 	"github.com/tetratelabs/wazero"
@@ -22,8 +23,15 @@ import (
 //go:embed lib/webp.wasm.gz
 var webpWasm []byte
 
+func stopClock(what string, t time.Time) {
+	elapsed := time.Since(t)
+	fmt.Printf("%s took %s\n", what, elapsed)
+}
+
 func decode(r io.Reader, configOnly, decodeAll bool) (*WEBP, image.Config, error) {
 	initOnce()
+	start := time.Now()
+	defer stopClock("decode", start)
 
 	decodeAll = true // TODO(bep)
 
@@ -358,6 +366,8 @@ var (
 )
 
 func initialize() {
+	start := time.Now()
+	defer stopClock("init wasm", start)
 	ctx := context.Background()
 	rt = wazero.NewRuntime(ctx)
 
