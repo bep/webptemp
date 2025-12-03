@@ -10,6 +10,7 @@ import (
 	"image"
 	"image/color"
 	"io"
+	"math/bits"
 	"os"
 	"runtime"
 	"sync"
@@ -17,6 +18,8 @@ import (
 	"unsafe"
 
 	"github.com/tetratelabs/wazero"
+	"github.com/tetratelabs/wazero/api"
+	"github.com/tetratelabs/wazero/experimental"
 	"github.com/tetratelabs/wazero/imports/wasi_snapshot_preview1"
 )
 
@@ -30,8 +33,6 @@ func stopClock(what string, t time.Time) {
 
 func decode(r io.Reader, configOnly, decodeAll bool) (*WEBP, image.Config, error) {
 	initOnce()
-	start := time.Now()
-	defer stopClock("decode", start)
 
 	decodeAll = true // TODO(bep)
 
@@ -368,8 +369,15 @@ var (
 func initialize() {
 	start := time.Now()
 	defer stopClock("init wasm", start)
+	cfg := wazero.NewRuntimeConfig()
+	cfg = cfg.WithCoreFeatures(api.CoreFeaturesV2)
+	if bits.UintSize < 64 {
+		cfg = cfg.WithMemoryLimitPages(512) // 32MB
+	} else {
+		cfg = cfg.WithMemoryLimitPages(4096) // 256MB
+	}
 	ctx := context.Background()
-	rt = wazero.NewRuntime(ctx)
+	rt = wazero.NewRuntimeWithConfig(ctx, cfg)
 
 	r, err := gzip.NewReader(bytes.NewReader(webpWasm))
 	if err != nil {
@@ -383,7 +391,7 @@ func initialize() {
 		panic(err)
 	}
 
-	cm, err = rt.CompileModule(ctx, data.Bytes())
+	cm, err = rt.CompileModule(experimental.WithCompilationWorkers(ctx, runtime.GOMAXPROCS(0)/4), data.Bytes())
 	if err != nil {
 		panic(err)
 	}
